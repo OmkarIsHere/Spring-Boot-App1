@@ -27,20 +27,10 @@
 			margin: 20px 10px 20px 10px;
 	}
 	
-	/* table {
-	            width: 100%;
-	            border-collapse: collapse;
-	        }
-	        table, th, td {
-	            border: 1px solid black;
-	        }
-	        th, td {
-	            padding: 10px;
-	            text-align: center;
-	        }
-	        th {
-	            background-color: rgb(208, 232, 255);
-	        } */
+	#updateButtonContainer{
+		display: none;
+	}
+
 	
 </style>
 </head>
@@ -54,17 +44,17 @@
 <form id="submitForm" action="/students/register" method="post">
 	<input type="hidden" id="studentId" name="sId" />
 	<div class="form-floating mb-1">
-	  <input type="name" class="form-control" id="floatingInput" name="sName">
+	  <input type="name" class="form-control" id="floatingInput" name="sName" required>
 	  <label for="floatingInput">Full Name</label>
 	</div>
 	<br/>
 	<div class="form-floating mb-1">
-	  <input type="text" class="form-control" id="floatingInput" name="sPhone">
+	  <input type="text" class="form-control" id="floatingInput" name="sPhone" required>
 	  <label for="floatingInput">Phone No</label>
 	</div>
 	<br/>
 	<div class="form-floating mb-3">
-	  <input type="email" class="form-control" id="floatingInput" name="sEmail">
+	  <input type="email" class="form-control" id="floatingInput" name="sEmail" required>
 	  <label for="floatingInput">Email address</label>
 	</div>
 	<br/>
@@ -81,18 +71,23 @@
 	<br/>
 
 	<div class="form-floating mb-3">
-	  <input type="password" class="form-control" id="floatingInput" name="sPassword">
+	  <input type="password" class="form-control" id="floatingInput" name="sPassword" required>
 	  <label for="floatingInput">Password</label>
 	</div>
 	<br/>
-	<button type="submit" class="btn btn-primary btn-lg">Register</button>	
+	<button type="submit" id="registerButton" class="btn btn-primary col-5 mx-auto">Register</button>	
 	<br/>
 </form>
+<div id="updateButtonContainer">
+<div class="d-grid gap-2 col-5 mx-auto">
+  <button id="cancelButton" class="btn btn-secondary" type="button">Cancel</button>
+  <button id="updateButton" class="btn btn-warning" type="button">Update</button>
+</div>
+</div>
 </center>
 </div>
 <div class="student-container">
 	<center>
-
 	<h2>Student List</h2>
 	</br>
 	    <table id="studentTable" class="table table-primary table-striped">
@@ -117,6 +112,13 @@
 </div>
 
 <script>
+	
+	//document.addEventListener("DOMContentLoaded", () => {
+	    const registerButton = document.getElementById("registerButton");
+	    const updateButtonContainer = document.getElementById("updateButtonContainer");
+	    const studentForm = document.getElementById("submitForm");
+			
+		updateButtonContainer.style.display = "none";
 			
         document.getElementById("submitForm").addEventListener("submit", async function (e) {
             e.preventDefault();
@@ -141,7 +143,7 @@
                         timer: 3000,
                         showConfirmButton: false
                     });
-					resetAllfeilds();
+					studentForm.reset();
 					fetchStudents();
                 } else {
                     Swal.fire({
@@ -162,8 +164,14 @@
                 });
             }
         });
-
 		
+		
+		document.getElementById("cancelButton").addEventListener("click", () => {
+		        studentForm.reset();
+		        updateButtonContainer.style.display = "none";
+		        registerButton.style.display = "block";
+		});
+			
 
 		async function fetchStudents() {
 		        try {
@@ -196,32 +204,84 @@
 		        }
 		    }
 		
-		function resetAllfeilds(){
-			document.querySelector('input[name="sId"]').value = "";
-		    document.querySelector('input[name="sName"]').value = "";
-		    document.querySelector('input[name="sPhone"]').value = "";
-		    document.querySelector('input[name="sEmail"]').value = "";
-		    document.querySelector('select[name="sCourse"]').value = "";
-		    document.querySelector('input[name="sPassword"]').value = "";
-		}		 
+		//function resetAllfeilds(){
+			//document.querySelector('input[name="sId"]').value = "";
+		    //document.querySelector('input[name="sName"]').value = "";
+		    //document.querySelector('input[name="sPhone"]').value = "";
+	//		    document.querySelector('input[name="sEmail"]').value = "";
+		//    document.querySelector('select[name="sCourse"]').value = "";
+		  //  document.querySelector('input[name="sPassword"]').value = "";
+		//}		 
 										
 		    
 		function editingStudent(index) {
 			    const student = window.students[index];
 			    if (!student) return;
-				document.querySelector('input[name="sId"]').value = student.sId;
+				document.querySelector('input[name="sId"]').value = student.id;
 			    document.querySelector('input[name="sName"]').value = student.sName;
 			    document.querySelector('input[name="sPhone"]').value = student.sPhone;
 			    document.querySelector('input[name="sEmail"]').value = student.sEmail;
 			    document.querySelector('select[name="sCourse"]').value = student.sCourse;
 			    document.querySelector('input[name="sPassword"]').value = student.sPassword;
 
+				registerButton.style.display = "none";
+				updateButtonContainer.style.display = "block";
+				
 			    // Optionally, store the student ID in a hidden field for update operations
-			    document.getElementById('studentId').value = student.id;
+			    //document.getElementById('studentId').value = student.id;
 		}	
+		
+		
+		document.getElementById("updateButton").addEventListener("click", async () => {
+		        const studentId = document.querySelector('input[name="sId"]').value;
+		        if (!studentId) return alert("No student selected for update!");
+
+		        // Collect form data
+		        const formData = new FormData(studentForm);
+		        const data = Object.fromEntries(formData.entries());
+
+		        try {
+		            const response = await fetch(`/students/${studentId}`, {
+		                method: "PUT",
+		                headers: { "Content-Type": "application/json" },
+		                body: JSON.stringify(data),
+		            });
+
+		            if (response.ok) {
+		                Swal.fire({
+		                    icon: "success",
+		                    title: "Updated!",
+		                    text: "Student updated successfully!",
+		                    timer: 3000,
+		                    showConfirmButton: false,
+		                });
+		                fetchStudents();
+		                studentForm.reset();
+		                updateButtonContainer.style.display = "none";
+		                registerButton.style.display = "block";
+		            } else {
+		                const errorMsg = await response.text();
+		                Swal.fire({
+		                    icon: "error",
+		                    title: "Error!",
+		                    text: errorMsg,
+		                    timer: 5000,
+		                    showConfirmButton: false,
+		                });
+		            }
+		        } catch (error) {
+		            Swal.fire({
+		                icon: "error",
+		                title: "Error!",
+		                text: "An unexpected error occurred.",
+		                timer: 5000,
+		                showConfirmButton: false,
+		            });
+		        }
+		    });
 			
 			
-			async function deleteStudent(id) {
+		async function deleteStudent(id) {
 				//var sId = window.students[id].sId;
 				console.log("Delete sId : "+ id);
 				if (!id) {
@@ -241,7 +301,8 @@
 			    }
 			}
 				
-		window.onload = fetchStudents;	
+		window.onload = fetchStudents;
+	//});		
 					
 </script>
 
