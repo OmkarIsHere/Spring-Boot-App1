@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,8 +30,9 @@ public class RegisterController {
 //	}
 	
 	@PostMapping("/register")
-    public ResponseEntity<?> userRegistration(@RequestBody Student student) {
-        System.out.println(student.toString());
+    public ResponseEntity<?> userRegistration(@RequestBody Student student, @RequestHeader("Content-Type") String contentType) {
+		 System.out.println("Received Content-Type: " + contentType);
+		 System.out.println(student.toString());
         try {
              Student savedStudent = studentService.saveStudent(student);
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -91,9 +93,10 @@ public class RegisterController {
 	
     // Delete Student
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
+    public ResponseEntity<?> deleteStudent(@PathVariable String id) {
+    	System.out.print("SId : " + id);
         try {
-            boolean isDeleted = studentService.deleteStudent(id);
+            boolean isDeleted = studentService.deleteStudent(Long.parseLong(id));
             if (!isDeleted) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Student not found with ID: " + id);

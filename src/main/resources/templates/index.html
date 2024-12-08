@@ -22,12 +22,12 @@
 	}
 	
 	.student-container{
-			width: 50%;
+			width: 60%;
 			align-items: center;
-			margin: 20px 50px 20px 50px;
+			margin: 20px 10px 20px 10px;
 	}
 	
-	table {
+	/* table {
 	            width: 100%;
 	            border-collapse: collapse;
 	        }
@@ -40,7 +40,7 @@
 	        }
 	        th {
 	            background-color: rgb(208, 232, 255);
-	        }
+	        } */
 	
 </style>
 </head>
@@ -51,7 +51,8 @@
 	<center>
 	<h2 class="headline">Student Registration</h2>
 	<br/>
-<form id="studentForm" action="/students/register" method="post">
+<form id="submitForm" action="/students/register" method="post">
+	<input type="hidden" id="studentId" name="sId" />
 	<div class="form-floating mb-1">
 	  <input type="name" class="form-control" id="floatingInput" name="sName">
 	  <label for="floatingInput">Full Name</label>
@@ -84,7 +85,7 @@
 	  <label for="floatingInput">Password</label>
 	</div>
 	<br/>
-	<button type="submit" class="btn btn-primary btn-lg">Submit</button>	
+	<button type="submit" class="btn btn-primary btn-lg">Register</button>	
 	<br/>
 </form>
 </center>
@@ -94,9 +95,9 @@
 
 	<h2>Student List</h2>
 	</br>
-	    <table id="studentTable">
+	    <table id="studentTable" class="table table-primary table-striped">
 	        <thead>
-	            <tr>
+	            <tr class="table-primary">
 	                <th>Name</th>
 	                <th>Email</th>
 	                <th>Phone</th>
@@ -110,67 +111,20 @@
 	            
 	        </tbody>
 	    </table>
-		<center>
+	</center>
 
 </div>
 </div>
 
 <script>
-	
-		async function fetchStudents() {
-	            try {
-	                const response = await fetch('/students/');
-	                if (!response.ok) {
-	                    throw new Error('Failed to fetch students');
-	                }
-	                const students = await response.json();
-
-	                // Populate the table
-	                const tableBody = document.getElementById('studentTable').querySelector('tbody');
-	                tableBody.innerHTML = ''; // Clear existing rows
-	                
-	                students.forEach(student => {
-	                    const row = document.createElement('tr');
-	                    row.innerHTML = `
-	                        <td>${student.sName}</td>
-	                        <td>${student.sEmail}</td>
-	                        <td>${student.sPhone}</td>
-	                        <td>${student.sCourse}</td>
-							<td>${student.sPassword}</td>
-							<td><button class="btn">Edit</button></td> //onclick="editStudent(${index})" 
-							<td>Delete</td>
-	                    `;
-	                    tableBody.appendChild(row);
-	                });
-	            } catch (error) {
-	                console.error('Error fetching students:', error);
-	            }
-	        }
-
-	        
-		function editStudent(student) {
-			    const student = students[index];
-			    if (!student) return;
-
-			    document.querySelector('input[name="sName"]').value = student.sName;
-			    document.querySelector('input[name="sPhone"]').value = student.sPhone;
-			    document.querySelector('input[name="sEmail"]').value = student.sEmail;
-			    document.querySelector('select[name="sCourse"]').value = student.sCourse;
-			    document.querySelector('input[name="sPassword"]').value = student.sPassword;
-
-			    // Optionally, store the student ID in a hidden field for update operations
-			    document.getElementById('studentId').value = student.id;
-			}	
-	
-        document.getElementById("studentForm").addEventListener("submit", async function (e) {
+			
+        document.getElementById("submitForm").addEventListener("submit", async function (e) {
             e.preventDefault();
             
-            // Collect form data
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
-            console.log(formData.toString());
+            console.log(data);
             try {
-                // Send POST request
                 const response = await fetch("/students/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" }, //"application/x-www-form-urlencoded" },
@@ -179,7 +133,6 @@
 
                 const message = await response.text(); 
 
-                // Display toast notification
                 if (response.ok) {
                     Swal.fire({
                         icon: "success",
@@ -188,6 +141,8 @@
                         timer: 3000,
                         showConfirmButton: false
                     });
+					resetAllfeilds();
+					fetchStudents();
                 } else {
                     Swal.fire({
                         icon: "error",
@@ -209,10 +164,86 @@
         });
 
 		
-		// Fetch students when the page loads
-		window.onload = fetchStudents;
+
+		async function fetchStudents() {
+		        try {
+		            const response = await fetch('/students/');
+		            if (!response.ok) {
+		                throw new Error('Failed to fetch students');
+		            }
+		            const students = await response.json();
+
+		            
+		            const tableBody = document.getElementById('studentTable').querySelector('tbody');
+		            tableBody.innerHTML = ''; 
+		            
+		            students.forEach((student, index) => {
+		                const row = document.createElement('tr');
+		                row.innerHTML = `
+		                    <td>${student.sName}</td>
+		                    <td>${student.sEmail}</td>
+		                    <td>${student.sPhone}</td>
+		                    <td>${student.sCourse}</td>
+							<td>${student.sPassword}</td>
+							<td><button type="button" class="btn btn-warning" onclick="editingStudent(${index})">Edit</button></td>
+							<td><button type="button" class="btn btn-danger" onclick="deleteStudent(${student.id})">Delete</button></td>
+		                `;
+		                tableBody.appendChild(row); 
+		            });
+					window.students = students;
+		        } catch (error) {
+		            console.log('Error fetching students:', error);
+		        }
+		    }
+		
+		function resetAllfeilds(){
+			document.querySelector('input[name="sId"]').value = "";
+		    document.querySelector('input[name="sName"]').value = "";
+		    document.querySelector('input[name="sPhone"]').value = "";
+		    document.querySelector('input[name="sEmail"]').value = "";
+		    document.querySelector('select[name="sCourse"]').value = "";
+		    document.querySelector('input[name="sPassword"]').value = "";
+		}		 
+										
+		    
+		function editingStudent(index) {
+			    const student = window.students[index];
+			    if (!student) return;
+				document.querySelector('input[name="sId"]').value = student.sId;
+			    document.querySelector('input[name="sName"]').value = student.sName;
+			    document.querySelector('input[name="sPhone"]').value = student.sPhone;
+			    document.querySelector('input[name="sEmail"]').value = student.sEmail;
+			    document.querySelector('select[name="sCourse"]').value = student.sCourse;
+			    document.querySelector('input[name="sPassword"]').value = student.sPassword;
+
+			    // Optionally, store the student ID in a hidden field for update operations
+			    document.getElementById('studentId').value = student.id;
+		}	
+			
+			
+			async function deleteStudent(id) {
+				//var sId = window.students[id].sId;
+				console.log("Delete sId : "+ id);
+				if (!id) {
+			        return;
+				}
+			    try {
+			        const response = await fetch(`/students/${id}`, { method: 'DELETE' });
+			        if (response.ok) {
+			            Swal.fire('Deleted!', 'Student has been deleted.', 'success');
+			            fetchStudents();
+			        } else {
+			            const message = await response.text();
+			            Swal.fire('Error!', message, 'error');
+			        }
+			    } catch (error) {
+			        Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+			    }
+			}
+				
+		window.onload = fetchStudents;	
 					
-		</script>
+</script>
 
 </body>
 </html>

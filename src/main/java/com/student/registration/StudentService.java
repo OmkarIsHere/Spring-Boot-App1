@@ -45,6 +45,9 @@ public class StudentService {
     
     // Delete Student
     public boolean deleteStudent(Long id) {
+//    	if (!studentRepository.existsById(id)) {
+//            throw new EntityNotFoundException("Student not found with ID: " + id);
+//        }
         Optional<Student> existingStudent = studentRepository.findById(id);
         if (existingStudent.isPresent()) {
             studentRepository.deleteById(id);
